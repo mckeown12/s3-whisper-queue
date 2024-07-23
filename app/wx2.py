@@ -61,7 +61,7 @@ def format_segments(result):
         end_minutes = int(segment['end'] // 60)
         end_seconds = int(segment['end'] % 60)
         speaker = segment.get('speaker', 'Unknown')
-        print(segment)
+        # print(segment)
         formatted_output += f"[{start_minutes}:{start_seconds:02d} -> {end_minutes}:{end_seconds:02d}]({speaker}) {segment['text']}\n"
     return formatted_output
 
