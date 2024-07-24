@@ -42,6 +42,7 @@ def processObj(obj):
     with open(f"/tmp/{uuid}.txt", "w", encoding='utf-8') as file:
         file.write(transcription)
     #upload the transcription output to S3
+    print(f"uploading /tmp/{uuid}.txt to {bucket} path {bucket_transcript_path}/{uuid}")
     upload_res = s3.upload_file(f"/tmp/{uuid}.txt", bucket, f"{bucket_transcript_path}/{uuid}")
     print(upload_res)
     #delete the local file
