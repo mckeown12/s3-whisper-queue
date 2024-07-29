@@ -62,4 +62,11 @@ while True:
         #shut down computer
         os.system("sudo shutdown now")
     for obj in transcription_queue['Contents']:
-        processObj(obj)
+        try:
+            processObj(obj)
+        except Exception as e:
+            print(f"Error processing {obj['Key']}")
+            print(e)
+            import traceback
+            traceback.print_exc()
+            continue
