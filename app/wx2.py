@@ -27,12 +27,14 @@ def process_audio(audio_path, transcription_model, diarization_model, device, ba
     t_start = time.time()
     audio = whisperx.load_audio(audio_path)
     print(f'Audio loaded in {time.time() - t_start:.2f} seconds.')
-    
+    #see how long audio is assuming 16kHz
+    print(f"Audio duration: {len(audio) / 16000} seconds")
     print('Transcribing audio...')
     t_start = time.time()
     transcribe_result = transcription_model.transcribe(audio, batch_size=batch_size)
     print(f'Transcription completed in {time.time() - t_start:.2f} seconds.')
-
+    if transcribe_result['language'] not in ['en', 'es', 'fr']:
+        transcribe_result['language'] = 'en' #if something else was detected it was probably wrong
     # Load alignment model based on detected language
     align_model, metadata = load_alignment_model(transcribe_result["language"], device)
 
