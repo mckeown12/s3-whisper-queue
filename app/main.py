@@ -5,7 +5,6 @@ from time import sleep
 import json
 import httpx
 from .myTypes import SalesforceRequest, GMTranscribeRequest, SalesforceExternalRequest
-
 region_name = "us-east-1"
 bucket = os.getenv('BUCKET_NAME')
 bucket_audio_path = os.getenv("BUCKET_AUDIO_PATH")
@@ -21,6 +20,8 @@ if 'Contents' not in transcription_queue:
     sleep(60)
     os.system("sudo shutdown")
 else:
+    from operator import itemgetter
+    transcription_queue['Contents'] = sorted(transcription_queue['Contents'], key=itemgetter('LastModified'))
     print(f"Found {len(transcription_queue['Contents'])} files to transcribe")
 print('about to import transcribe_audio')
 t1 = time.time()
