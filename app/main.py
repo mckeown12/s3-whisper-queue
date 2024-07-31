@@ -115,8 +115,8 @@ def processObj(obj):
         #delete the local audio file
         os.remove(f"/tmp/{uuid}")
         #delete the object from the queue
-        s3.delete_object(Bucket=bucket, Key=audio_path)
-        print(f"Transcription {audio_path} complete")
+    s3.delete_object(Bucket=bucket, Key=audio_path)
+    print(f"Transcription {audio_path} complete")
 
 
 #check if anything new has arrived since we started
