@@ -33,12 +33,13 @@ print(time.time() - t1, 'seconds to import transcribe_audio and diarize')
 resp = httpx.post("https://salesforce.watsco.ai/token", data={"username": os.getenv('APP_USER'), "password": os.getenv('APP_PASS')})
 tok = resp.json()['access_token']
 
-def make_request(uuid, transcription, duration):
+def make_request(uuid, transcription, duration, language):
     req = s3.get_object(Bucket='gpt-api-temp',Key=f'transcribe-audio-requests/{uuid}')['Body'].read()
     print(req)
     req = json.loads(req)
     req['duration'] = duration
     req['transcription'] = transcription
+    req['language'] = language
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + tok
@@ -98,11 +99,11 @@ def processObj(obj):
     s3.download_file(bucket, audio_path, f"/tmp/{uuid}")
     print(f"Transcribing {audio_path}")
     t1 = time.time()
-    transcription, duration = process_audio(f"/tmp/{uuid}", transcription_model, diarization_model, device, batch_size)
+    transcription, duration, language = process_audio(f"/tmp/{uuid}", transcription_model, diarization_model, device, batch_size)
     t2 = time.time()
     print(f"Transcription took {t2 - t1} seconds")
     print(f"Transcription: {transcription}")
-    went_through = make_request(uuid, transcription, duration)
+    went_through = make_request(uuid, transcription, duration, language)
     if not went_through:
         #write the transcription output to a local file
         with open(f"/tmp/{uuid}.txt", "w", encoding='utf-8') as file:

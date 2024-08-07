@@ -24,6 +24,8 @@ class SalesforceRequest(BaseModel):
     template: list[SalesforceTemplate]
     transcription: str | None = None
     duration: float | None = None
+    language: str | None = 'en'
+
 
 class SalesforceExternalRequest(BaseModel):
     salesforce_instance: str
@@ -32,6 +34,8 @@ class SalesforceExternalRequest(BaseModel):
     template: list[SalesforceTemplate]
     transcription: str | None = None
     duration: float | None = None
+    language: str | None = 'en'
+
 
 class GMTranscribeRequest(BaseModel):
     audio_file_url: str
@@ -39,3 +43,4 @@ class GMTranscribeRequest(BaseModel):
     template: list[SalesforceTemplate]
     transcription: str | None = None
     duration: float | None = None
+    language: str | None = 'en'

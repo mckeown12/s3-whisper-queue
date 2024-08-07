@@ -1,6 +1,8 @@
 import whisperx
 import os
 import time
+import re
+
 
 def load_models(device, compute_type):
     print('Loading transcription model...')
@@ -53,7 +55,21 @@ def process_audio(audio_path, transcription_model, diarization_model, device, ba
     final_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
     print(f'Speaker assignment completed in {time.time() - t_start:.2f} seconds.')
 
-    return format_segments(final_result), len(audio) / 16000
+    return format_segments(final_result), len(audio) / 16000, transcribe_result[['language']]
+
+
+def clean_single_speaker_transcript(transcript):
+    # Check if there's more than one speaker
+    speakers = set(re.findall(r"\[SPEAKER_(\d+)\]", transcript))
+    # If only one speaker, proceed to clean the transcript
+    if len(speakers) == 1:
+        # Remove all diarization and time information
+        cleaned_transcript = re.sub(r"\[\d{1,2}:\d{2} -> \d{1,2}:\d{2}\]\[SPEAKER_\d{2}\] ", "", transcript)
+    else:
+        # If there are multiple speakers, return the original transcript
+        cleaned_transcript = transcript
+    return cleaned_transcript
+
 
 def format_segments(result):
     formatted_output = ''
@@ -65,7 +81,8 @@ def format_segments(result):
         speaker = segment.get('speaker', 'Unknown')
         # print(segment)
         formatted_output += f"[{start_minutes}:{start_seconds:02d} -> {end_minutes}:{end_seconds:02d}]({speaker}) {segment['text']}\n"
-    return formatted_output
+    #if there is only one speaker, remove all the diarization and time info
+    return clean_single_speaker_transcript(formatted_output)
 
 # Set up
 device = "cuda" 
