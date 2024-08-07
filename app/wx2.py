@@ -55,7 +55,7 @@ def process_audio(audio_path, transcription_model, diarization_model, device, ba
     final_result = whisperx.assign_word_speakers(diarize_segments, aligned_result)
     print(f'Speaker assignment completed in {time.time() - t_start:.2f} seconds.')
 
-    return format_segments(final_result), len(audio) / 16000, transcribe_result[['language']]
+    return format_segments(final_result), len(audio) / 16000, transcribe_result['language']
 
 
 def clean_single_speaker_transcript(transcript):
