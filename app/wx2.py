@@ -60,11 +60,11 @@ def process_audio(audio_path, transcription_model, diarization_model, device, ba
 
 def clean_single_speaker_transcript(transcript):
     # Check if there's more than one speaker
-    speakers = set(re.findall(r"\[SPEAKER_(\d+)\]", transcript))
+    speakers = set(re.findall(r"\(SPEAKER_(\d+)\)", transcript))
     # If only one speaker, proceed to clean the transcript
     if len(speakers) == 1:
         # Remove all diarization and time information
-        cleaned_transcript = re.sub(r"\[\d{1,2}:\d{2} -> \d{1,2}:\d{2}\]\[SPEAKER_\d{2}\] ", "", transcript)
+        cleaned_transcript = re.sub(r"\[\d{1,2}:\d{2} -> \d{1,2}:\d{2}\]\(SPEAKER_\d{2}\) ", "", transcript)
     else:
         # If there are multiple speakers, return the original transcript
         cleaned_transcript = transcript
