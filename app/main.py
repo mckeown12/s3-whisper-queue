@@ -121,13 +121,7 @@ def processObj(obj):
     print(f"Transcription {audio_path} complete")
 
 
-#check if anything new has arrived since we started
-while True:
-    transcription_queue = s3.list_objects_v2(Bucket=bucket, Prefix=bucket_audio_path)
-    if 'Contents' not in transcription_queue:
-        print('nothing left to process, shutting down')
-        #shut down computer
-        os.system("sudo shutdown now")
+def processTranscriptionQueue(transcription_queue):
     for obj in transcription_queue['Contents']:
         try:
             processObj(obj)
@@ -137,3 +131,24 @@ while True:
             import traceback
             traceback.print_exc()
             continue
+
+#check if anything new has arrived since we started
+while True:
+    time_to_wait = 300 # 5 minutes
+    poll_interval = 5
+    started_waiting = time.time()
+    #poll every 5 seconds until we've waited time_to_wait seconds
+    while time.time() - started_waiting < time_to_wait:
+        time.sleep(poll_interval)
+        new_transcription_queue = s3.list_objects_v2(Bucket=bucket, Prefix=bucket_audio_path)
+        if 'Contents' in new_transcription_queue:
+            print(f"found {len(new_transcription_queue['Contents'])} new files to process")
+            transcription_queue = new_transcription_queue
+            processTranscriptionQueue(transcription_queue)
+            break
+        else:
+            print(f'No new files found, will wait for {time_to_wait - (time.time() - started_waiting)} more seconds.')
+    else:
+        print('nothing left to process, shutting down')
+        #shut down computer
+        os.system("sudo shutdown now")
