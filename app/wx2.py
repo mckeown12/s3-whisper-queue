@@ -70,6 +70,32 @@ def clean_single_speaker_transcript(transcript):
         cleaned_transcript = transcript
     return cleaned_transcript
 
+def condense_conversation(conversation):
+    condensed_lines = []
+    current_speaker = None
+    current_text = ""
+    
+    for line in conversation.split('\n'):
+        match = re.match(r'\[(\d+:\d+) -> (\d+:\d+)\]\((SPEAKER_\d+|Unknown)\)\s*(.*)', line.strip())
+        if match:
+            start_time, end_time, speaker, text = match.groups()
+            
+            if speaker == current_speaker:
+                current_text += " " + text
+            else:
+                if current_speaker:
+                    condensed_lines.append(f"[{current_start_time} -> {current_end_time}]({current_speaker}) {current_text}")
+                current_speaker = speaker
+                current_text = text
+                current_start_time = start_time
+            
+            current_end_time = end_time
+    
+    if current_speaker:
+        condensed_lines.append(f"[{current_start_time} -> {current_end_time}]({current_speaker}) {current_text}")
+    
+    return "\n".join(condensed_lines)
+
 
 def format_segments(result):
     formatted_output = ''
@@ -82,7 +108,7 @@ def format_segments(result):
         # print(segment)
         formatted_output += f"[{start_minutes}:{start_seconds:02d} -> {end_minutes}:{end_seconds:02d}]({speaker}) {segment['text']}\n"
     #if there is only one speaker, remove all the diarization and time info
-    return clean_single_speaker_transcript(formatted_output)
+    return clean_single_speaker_transcript(condense_conversation(formatted_output))
 
 # Set up
 device = "cuda" 
