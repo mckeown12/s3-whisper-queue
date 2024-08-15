@@ -44,3 +44,5 @@ class GMTranscribeRequest(BaseModel):
     transcription: str | None = None
     duration: float | None = None
     language: str | None = 'en'
+    initial_transcript_prompt_template: str | None = None
+
