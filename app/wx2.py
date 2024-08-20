@@ -24,7 +24,7 @@ def load_alignment_model(language_code, device):
     print(f'Alignment model loaded in {time.time() - t_start:.2f} seconds.')
     return align_model, metadata
 
-def process_audio(audio_path, transcription_model, diarization_model, device, batch_size):
+def process_audio(audio_path, transcription_model, diarization_model, device, batch_size, multiple_speakers):
     print('Loading audio...')
     t_start = time.time()
     audio = whisperx.load_audio(audio_path)
@@ -37,6 +37,10 @@ def process_audio(audio_path, transcription_model, diarization_model, device, ba
     print(f'Transcription completed in {time.time() - t_start:.2f} seconds.')
     if transcribe_result['language'] not in ['en', 'es', 'fr']:
         transcribe_result['language'] = 'en' #if something else was detected it was probably wrong
+    
+    if multiple_speakers==False:
+        return ' '.join([x['text'] for x in transcribe_result['segments']]), len(audio) / 16000, transcribe_result['language']
+    
     # Load alignment model based on detected language
     align_model, metadata = load_alignment_model(transcribe_result["language"], device)
 

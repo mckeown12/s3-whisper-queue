@@ -33,21 +33,41 @@ print(time.time() - t1, 'seconds to import transcribe_audio and diarize')
 resp = httpx.post("https://salesforce.watsco.ai/token", data={"username": os.getenv('APP_USER'), "password": os.getenv('APP_PASS')})
 tok = resp.json()['access_token']
 
-def make_request(uuid, transcription, duration, language):
+def makeObj(uuid):
     req = s3.get_object(Bucket='gpt-api-temp',Key=f'transcribe-audio-requests/{uuid}')['Body'].read()
     print(req)
     req = json.loads(req)
-    req['duration'] = duration
-    req['transcription'] = transcription
-    req['language'] = language
+    try:
+        req2 = SalesforceRequest(**req)
+        return req2
+    except Exception as e:
+        print(f"failed to make request: {e}. Trying gm")
+    try:
+        req2 = GMTranscribeRequest(**req)
+        return req2
+    except Exception as e:
+        print(f"failed to make gm request: {e} trying external")
+    try:
+        req2 = SalesforceExternalRequest(**req)
+        return req2
+    except Exception as e:
+        print(f"failed to make external request: {e} Total fail.")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def make_request(uuid, req : SalesforceRequest | GMTranscribeRequest | SalesforceExternalRequest, transcription, duration, language):
+
+    req.duration = duration
+    req.transcription = transcription
+    req.language = language
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + tok
     }
-    try:
-        req2 = SalesforceRequest(**req)
-        payload = req2.model_dump_json()
-        print(payload)
+    payload = req.model_dump_json()
+    print(payload)
+    if isinstance(req, SalesforceRequest):
         res = httpx.post('https://salesforce.watsco.ai/transcribe/', data=payload, headers=headers, timeout=30)
         print(res)
         print(res.text)
@@ -56,14 +76,7 @@ def make_request(uuid, transcription, duration, language):
             s3.delete_object(Bucket='gpt-api-temp', Key=f'transcribe-audio-requests/{uuid}')
             return 1
         return 0
-    except Exception as e:
-        print(f"failed to make request: {e}. Trying gm")
-        # import traceback
-        # traceback.print_exc()
-    try:
-        req2 = GMTranscribeRequest(**req)
-        payload = req2.model_dump_json()
-        print(payload)
+    elif isinstance(req, GMTranscribeRequest):
         res = httpx.post('https://salesforce.watsco.ai/gm/transcribe/', data=payload, headers=headers, timeout=30)
         print(res)
         print(res.text)
@@ -72,12 +85,7 @@ def make_request(uuid, transcription, duration, language):
             s3.delete_object(Bucket='gpt-api-temp', Key=f"transcribe-audio-requests/{uuid}")
             return 1
         return 0
-    except Exception as e:
-        print(f"failed to make gm request: {e} trying external")
-    try:
-        req2 = SalesforceExternalRequest(**req)
-        payload = req2.model_dump_json()
-        print(payload)
+    elif isinstance(req, SalesforceExternalRequest):
         res = httpx.post('https://salesforce.watsco.ai/transcribe/', data=payload, headers=headers, timeout=30)
         print(res)
         print(res.text)
@@ -86,11 +94,7 @@ def make_request(uuid, transcription, duration, language):
             s3.delete_object(Bucket='gpt-api-temp', Key=f"transcribe-audio-requests/{uuid}")
             return 1
         return 0
-    except Exception as e:
-        print(f"failed to make external request: {e} Total fail.")
-        import traceback
-        traceback.print_exc()
-        return 0
+
     
 def processObj(obj):
     uuid = obj['Key'].split('/')[-1]
@@ -99,11 +103,12 @@ def processObj(obj):
     s3.download_file(bucket, audio_path, f"/tmp/{uuid}")
     print(f"Transcribing {audio_path}")
     t1 = time.time()
-    transcription, duration, language = process_audio(f"/tmp/{uuid}", transcription_model, diarization_model, device, batch_size)
+    req = makeObj(uuid)
+    transcription, duration, language = process_audio(f"/tmp/{uuid}", transcription_model, diarization_model, device, batch_size, multiple_speakers=req.multiple_speakers)
     t2 = time.time()
     print(f"Transcription took {t2 - t1} seconds")
     print(f"Transcription: {transcription}")
-    went_through = make_request(uuid, transcription, duration, language)
+    went_through = make_request(uuid, req, transcription, duration, language)
     if not went_through:
         #write the transcription output to a local file
         with open(f"/tmp/{uuid}.txt", "w", encoding='utf-8') as file:

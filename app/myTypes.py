@@ -16,6 +16,7 @@ class SalesforceTemplate(BaseModel):
     url : str
     body : str
     method : str
+    body_as_json: bool | None = False
     headers: dict[str, str] = {}
 
 class SalesforceRequest(BaseModel):
@@ -25,6 +26,8 @@ class SalesforceRequest(BaseModel):
     transcription: str | None = None
     duration: float | None = None
     language: str | None = 'en'
+    initial_transcript_prompt_template: str | None = None
+    multiple_speakers: bool | None = False
 
 
 class SalesforceExternalRequest(BaseModel):
@@ -35,6 +38,9 @@ class SalesforceExternalRequest(BaseModel):
     transcription: str | None = None
     duration: float | None = None
     language: str | None = 'en'
+    initial_transcript_prompt_template: str | None = None
+    multiple_speakers: bool | None = False
+
 
 
 class GMTranscribeRequest(BaseModel):
@@ -45,4 +51,5 @@ class GMTranscribeRequest(BaseModel):
     duration: float | None = None
     language: str | None = 'en'
     initial_transcript_prompt_template: str | None = None
+    multiple_speakers: bool | None = True
 
