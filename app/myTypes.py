@@ -14,7 +14,7 @@ class SalesforceTemplate(BaseModel):
             - Equipment (a list of dictionaries with keys manufacturer, serial, model)
     '''
     url : str
-    body : str
+    body : str | None = None
     method : str
     body_as_json: bool | None = False
     headers: dict[str, str] = {}
