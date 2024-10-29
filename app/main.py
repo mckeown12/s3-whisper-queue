@@ -140,7 +140,7 @@ def processTranscriptionQueue(transcription_queue):
 #check if anything new has arrived since we started
 print('finished first pass! Checking for new objects...')
 while True:
-    time_to_wait = 300 # 5 minutes
+    time_to_wait = 3000 # 50 minutes
     poll_interval = 5
     started_waiting = time.time()
     #poll every 5 seconds until we've waited time_to_wait seconds
