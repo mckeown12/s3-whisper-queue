@@ -1,5 +1,17 @@
-import boto3
+# pip install latest whisperX by cloning to fix https://github.com/m-bain/whisperX/issues/943
 import os
+
+def pip_install_from_git(url):
+    #clone the repo
+    os.system(f"git clone {url}")
+    #get the name of the repo
+    repo_name = url.split('/')[-1].replace('.git', '')
+    #install the repo
+    os.system(f"pip3 install -e {repo_name} --break-system-packages")
+
+pip_install_from_git("https://github.com/m-bain/whisperX.git")
+
+import boto3
 import time
 from time import sleep
 import json
