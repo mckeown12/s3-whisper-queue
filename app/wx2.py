@@ -1,4 +1,4 @@
-import whisperX as whisperx
+import whisperx
 import os
 import time
 import re
