@@ -1,15 +1,25 @@
 # pip install latest whisperX by cloning to fix https://github.com/m-bain/whisperX/issues/943
 import os
+import sys
+import subprocess
 
 def pip_install_from_git(url):
-    #clone the repo
-    os.system(f"git clone {url}")
-    #get the name of the repo
-    repo_name = url.split('/')[-1].replace('.git', '')
-    #install the repo
-    os.system(f"pip3 install -e {repo_name} --break-system-packages")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "git+" + url])
 
-pip_install_from_git("https://github.com/m-bain/whisperX.git")
+def ensure_whisperx_installed():
+    try:
+        import whisperx
+    except ImportError:
+        print("Installing whisperx...")
+        pip_install_from_git("https://github.com/m-bain/whisperX.git")
+        # Force a fresh import
+        import importlib
+        importlib.invalidate_caches()
+        whisperx = importlib.import_module("whisperx")
+    return whisperx
+
+# usage
+whisperx = ensure_whisperx_installed()
 
 import boto3
 import time
