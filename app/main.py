@@ -10,6 +10,10 @@ def pip_install_from_git(url):
     os.system(f"pip3 install -e {repo_name} --break-system-packages")
 
 pip_install_from_git("https://github.com/m-bain/whisperX.git")
+# Reload site packages
+import site
+importlib.reload(site)
+
 import importlib
 importlib.invalidate_caches()
 whisperx = importlib.import_module("whisperx")
