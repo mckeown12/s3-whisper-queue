@@ -12,9 +12,9 @@ def pip_install_from_git(url):
 pip_install_from_git("https://github.com/m-bain/whisperX.git")
 # Reload site packages
 import site
+import importlib
 importlib.reload(site)
 
-import importlib
 importlib.invalidate_caches()
 whisperx = importlib.import_module("whisperx")
 import boto3
