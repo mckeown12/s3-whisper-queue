@@ -1,22 +1,23 @@
 # pip install latest whisperX by cloning to fix https://github.com/m-bain/whisperX/issues/943
 import os
 
-def pip_install_from_git(url):
-    #clone the repo
-    os.system(f"git clone {url}")
-    #get the name of the repo
-    repo_name = url.split('/')[-1].replace('.git', '')
-    #install the repo
-    os.system(f"pip3 install -e {repo_name} --break-system-packages")
+# def pip_install_from_git(url):
+#     #clone the repo
+#     os.system(f"git clone {url}")
+#     #get the name of the repo
+#     repo_name = url.split('/')[-1].replace('.git', '')
+#     #install the repo
+#     os.system(f"pip3 install -e {repo_name} --break-system-packages")
 
-pip_install_from_git("https://github.com/m-bain/whisperX.git")
-# Reload site packages
-import site
-import importlib
-importlib.reload(site)
+# pip_install_from_git("https://github.com/m-bain/whisperX.git")
+# # Reload site packages
+# import site
+# import importlib
+# importlib.reload(site)
 
-importlib.invalidate_caches()
-whisperx = importlib.import_module("whisperx")
+# importlib.invalidate_caches()
+# whisperx = importlib.import_module("whisperx")
+
 import boto3
 import time
 from time import sleep
@@ -122,7 +123,25 @@ def processObj(obj):
     print(f"Transcribing {audio_path}")
     t1 = time.time()
     req = makeObj(uuid)
-    transcription, duration, language = process_audio(f"/tmp/{uuid}", transcription_model, diarization_model, device, batch_size, multiple_speakers=req.multiple_speakers)
+    try:
+        transcription, duration, language = process_audio(f"/tmp/{uuid}", transcription_model, diarization_model, device, batch_size, multiple_speakers=req.multiple_speakers)
+    except Exception as e:
+        #if the file is older than one day, delete both the audio file and the request
+        print(f"Error transcribing {audio_path}")
+        print(e)
+        import traceback
+        traceback.print_exc()
+        if time.time() - obj['LastModified'].timestamp() > 86400:
+            print(f"Deleting {audio_path} and request {uuid}")
+            s3.delete_object(Bucket=bucket, Key=audio_path)
+            s3.delete_object(Bucket='gpt-api-temp', Key=f'transcribe-audio-requests/{uuid}')
+            os.remove(f"/tmp/{uuid}")
+            return
+        else:
+            print(f"Transcription failed for {audio_path}, will try again in 5 minutes")
+            #delete the audio file
+            os.remove(f"/tmp/{uuid}")
+            return
     t2 = time.time()
     print(f"Transcription took {t2 - t1} seconds")
     print(f"Transcription: {transcription}")
